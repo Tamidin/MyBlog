@@ -1,0 +1,15 @@
+h1(align="center") Посты
+div(style="position:relative; left:25%; width:50%;")
+  h2= post.title
+  p= post.body
+  p(align=center) Комментарии:
+  p= comms.body
+  if user
+    a Добавить комментарий
+    form(method='post', action='/add_comment'+post._id)
+      input(name='comm[author_id]', type='hidden', value=user._id)
+      br
+      textarea(name='comm[body]')
+      br
+      button(type=submit) Сохранить
+a(href='/') На главную

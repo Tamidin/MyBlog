@@ -1,0 +1,11 @@
+
+form(method='post', action='/add_post')
+  input(name='post[id]', type='hidden')
+  a Тема
+  br
+  input(name='post[title]')
+  br
+  textarea(name='post[body]')
+  br
+  button(type=submit) Сохранить
+a(href='/') Вернуться
