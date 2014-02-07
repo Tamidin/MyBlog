@@ -1,0 +1,11 @@
+form(method='post', action='/post/id'+post._id)
+  input(type="hidden" name="_method" value="put")
+  input(name='post[id]', type='hidden', value=post._id)
+  a Тема
+  br
+  input(name='post[title]', value=post.title)
+  br
+  textarea(name='post[body]')= post.body
+  br
+  button(type=submit) Сохранить
+a(href='/post/id'+post._id) Вернуться

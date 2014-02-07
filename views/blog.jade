@@ -1,15 +1,24 @@
 h1(align="center") Блог Тая ^_^
-if user
+if user && user.role=='admin'
   div(style='margin: 0 auto; width:700px')
     nav
-      a(href='add_post' align=center) Добавить запись
+      a(href='post/new' align=center) Добавить запись
 div(style="display:table;margin-left:auto;margin-right:auto;width:60%")
   div(style="display:table-row")
     div(style="display:table-cell;width:80%;padding:5")
       each post, index in posts
-        p= post.cr_date
-        a(href='post'+post._id)= post.title
+        if user && user.role=='admin'
+          form(method='post', action='/post/id'+post._id)
+            input(type="hidden" name="_method" value="delete")
+            button(type=submit) Удалить
+        if post.cr_date
+          p #{moment(post.cr_date).format("DD MMM YYYY HH:mm")}
+        a(href='post/id'+post._id)= post.title
         p= post.body
+        if post.m_date
+          font(size=2)
+            p(align='right' ) #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
+        hr(color='blue')
     div(style="display:table-cell;padding:5")
       if user
         p= "Привет, "+user.login

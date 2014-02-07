@@ -1,12 +1,33 @@
 h1(align="center") Посты
 div(style="position:relative; left:25%; width:50%;")
+  if user && user.role=='admin'
+    form(method='post', action='/post/id'+post._id)
+      input(type="hidden" name="_method" value="delete")
+      button(type=submit) Удалить
+      input(type="button" value="Изменить" onclick="location.href='/post/edit/id"+post._id+"'")
   h2= post.title
   p= post.body
+  if post.m_date
+    font(size=2)
+      p(align='right' ) #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
+  hr(color='blue')
   p(align=center) Комментарии:
-  p= comms.body
+  each comm, index in comms
+    if user && user.role=='admin'
+      form(method='post', action='/comm/'+comm._id)
+        input(name='post[id]', type='hidden', value=post._id)
+        input(type="hidden" name="_method" value="delete")
+        button(type=submit) Удалить
+    a #{moment(comm.cr_date).format("DD MMM YYYY HH:mm:ss")}
+    br
+    a= comm.author
+    br
+    p= comm.body
+    hr
   if user
     a Добавить комментарий
-    form(method='post', action='/add_comment'+post._id)
+    form(method='post', action='/comm/'+post._id)
+      input(name='post[id]', type='hidden', value=post._id)
       input(name='comm[author_id]', type='hidden', value=user._id)
       br
       textarea(name='comm[body]')
