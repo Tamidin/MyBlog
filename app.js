@@ -3,13 +3,15 @@
  * Module dependencies.
  */
 
-var express = require('express')
-  , routes = require('./routes')
-  , posts = require('./routes/posts.js');
+var express = require('express');
+  //routes = require('./routes');
   var http = require('http');
   var moment = require("moment");
   var path = require('path');
   var mongoskin = require('mongoskin');
+  var passport = require('passport');
+  var LinkedInStrategy = require('passport-linkedin').Strategy;
+  var VKontakteStrategy = require('passport-vkontakte').Strategy;
   var db = mongoskin.db('mongodb://localhost:27017/blog?auto_reconnect', {safe:true});
 
 var app = module.exports = express();
@@ -31,16 +33,118 @@ app.configure(function(){
   app.set('view engine', 'jade');
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
+  app.use("/styles", express.static(__dirname + '/public/stylesheets'));
+  app.use("/images", express.static(__dirname + '/public/images'));
 });
-
 
 app.use(function(req, res, next) {
   res.locals._csrf = req.session._csrf;
   return next();
 })
 
+//API for auth
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+//API for login with vkontakte
+
+passport.use(new VKontakteStrategy({
+    clientID:     '4185104', // VK.com docs call it 'API ID'
+    clientSecret: '1kNFQiBc0VCwEf39Uu7T',
+    callbackURL:  "/auth/vkontakte/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+        process.nextTick(function () {
+      return done(null, profile);
+    });
+  }
+));
+
+app.get('/auth/vkontakte', passport.authenticate('vkontakte'),function(req, res){});
+
+app.get('/auth/vkontakte/callback',
+  passport.authenticate('vkontakte', { failureRedirect: '/' }), 
+  function(req, res) {
+  req.db.users.findOne({vkontakte_id: req.user.id}, function(err, user){
+    if (user) {
+      req.session.user_id=user._id;
+      res.redirect("/");
+    } else {
+      db.collection('users').insert({
+        vkontakte_id: req.user.id,
+        login: req.user.displayName,
+        role: "user"
+      }, function(err,result) {
+        if (err) throw err;
+        if (result) {
+        }
+      });
+      req.db.users.findOne({vkontakte_id: req.user.id}, function(err, user){
+        req.session.user_id=user._id;
+        res.redirect("/");
+      });
+    }
+  });
+});
+
+//API for login with LinkedIn
+var LINKEDIN_API_KEY = "755o8jua672wwx";
+var LINKEDIN_SECRET_KEY = "4CGBbBzN5zh1uYC2";
+
+passport.use(new LinkedInStrategy({
+    consumerKey: LINKEDIN_API_KEY,
+    consumerSecret: LINKEDIN_SECRET_KEY,
+    callbackURL: "/auth/linkedin/callback"
+  },
+  function(token, tokenSecret, profile, done) {
+    process.nextTick(function () {
+      // To keep the example simple, the user's LinkedIn profile is returned to
+      // represent the logged-in user. In a typical application, you would want
+      // to associate the LinkedIn account with a user record in your database,
+      // and return that user instead.
+      return done(null, profile);
+    });
+  }
+));
+
+app.get('/auth/linkedin', passport.authenticate('linkedin'),function(req, res){});
+
+app.get('/auth/linkedin/callback',
+  passport.authenticate('linkedin', { failureRedirect: '/' }), 
+  function(req, res) {
+  req.db.users.findOne({linkedin_id: req.user.id}, function(err, user){
+    if (user) {
+      req.session.user_id=user._id;
+      res.redirect("/");
+    } else {
+      db.collection('users').insert({
+        linkedin_id: req.user.id,
+        login: req.user.displayName,
+        role: "user"
+      }, function(err,result) {
+        if (err) throw err;
+        if (result) {
+        }
+      });
+      req.db.users.findOne({linkedin_id: req.user.id}, function(err, user){
+        req.session.user_id=user._id;
+        res.redirect("/");
+      });
+    }
+  });
+});
 
 // Routes
 //Authorization
@@ -48,14 +152,14 @@ app.post('/auth', function(req, res){
   req.db.users.findOne({login: req.body.user.login, password: req.body.user.pass}, function(err, user){
     if (user) {
       req.session.user_id=user._id;
-    }
-    console.log("");
+      res.redirect(req.headers['referer']);
+    } else {
     res.redirect('/');
+    }
   });
 });
 
-app.get('/auth2', loadUser, function(req, res) {
-  // ������� ������
+app.del('/auth', checkAuth, function(req, res) {
   if (req.session) {
     req.session.destroy(function() {});
   }
@@ -63,11 +167,17 @@ app.get('/auth2', loadUser, function(req, res) {
 });
 
 //Registration
-app.get('/registration', function(req, res){
-  res.render('registration.jade');
+app.get('/registration', checkNonAuth, function(req, res){
+  if (req.session.user_id==null) {
+    res.render('registration.jade', {
+      title: 'Tamidin`s blog: Registration', 
+      blog_title: 'Регистрация', 
+      blog_descr: 'Позволит вам комментировать записи'
+    });
+  }
 });
 
-app.post('/registration', function(req, res) {
+app.post('/registration', checkNonAuth, function(req, res) {
     db.collection('users').insert({
     login: req.body.user.login,
     password: req.body.user.pass,
@@ -75,7 +185,6 @@ app.post('/registration', function(req, res) {
   }, function(err,result) {
         if (err) throw err;
     if (result) {
-      console.log();
       res.redirect("/");
     }
   });
@@ -86,13 +195,24 @@ app.get('/', function(req, res){
   req.db.posts.find().sort({$natural: -1}).toArray(function(err, posts){
       if (req.session.user_id) {req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
         if (user) {
-          res.render('blog.jade', {moment: moment, user: user, posts: posts || []});
+          res.render('blog.jade', {
+            title: 'Tamidin`s blog', 
+            blog_title: 'Блог Тая ^_^', 
+            blog_descr: 'В котором он учит nodejs', 
+            moment: moment, 
+            user: user, 
+            posts: posts || []});
         } 
       });
     } else {
-      res.render('blog.jade', {moment: moment, posts: posts || []});
+      res.render('blog.jade', {
+        title: 'Tamidin`s blog', 
+        blog_title: 'Блог Тая ^_^', 
+        blog_descr: 'В котором он учит nodejs',
+        moment: moment, 
+        posts: posts || []});
     }
-    //console.log(posts);
+    console.log(req.user);
   });
 });
 
@@ -103,17 +223,31 @@ app.get('/post/id:id.:format?', function(req, res){
       if (req.session.user_id) {
         req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
           if (user) {
-            res.render('post.jade', {moment: moment, user: user, post: post, comms: comms});
+            res.render('post.jade', {
+              title: 'Tamidin`s blog: '+post.title,
+              blog_title: post.title,
+              blog_descr: moment(post.cr_date).format("DD MMM YYYY HH:mm"),
+              moment: moment, 
+              user: user, 
+              post: post, 
+              comms: comms});
           };
         });
       } else {
-        res.render('post.jade', {moment: moment, post: post, comms: comms});
+        res.render('post.jade', {
+          title: 'Tamidin`s blog: '+post.title,
+          blog_title: post.title,
+          blog_descr: moment(post.cr_date).format("DD MMM YYYY HH:mm"),
+          moment: moment, 
+          post: post, 
+          comms: comms
+        });
       }
     });
   });
 });
 
-app.put('/post/id:id.:format?', function(req, res) {
+app.put('/post/id:id.:format?', checkAdmin, function(req, res) {
     req.db.posts.update({_id: db.ObjectID.createFromHexString(req.params.id)}, {$set: {
       body: req.body.post.body,
       title: req.body.post.title,
@@ -125,7 +259,7 @@ app.put('/post/id:id.:format?', function(req, res) {
     });
 });
 
-app.delete('/post/id:id.:format?', function(req, res) {
+app.delete('/post/id:id.:format?', checkAdmin, function(req, res) {
   req.db.comms.remove({post_id: req.params.id}, function(err, result) {
     if (err) throw err;
     });
@@ -136,19 +270,33 @@ app.delete('/post/id:id.:format?', function(req, res) {
 });
 
 //Edit post
-app.get('/post/edit/id:id.:format?', loadUser, function(req, res){
+app.get('/post/edit/id:id.:format?', checkAdmin, function(req, res){
   req.db.posts.findOne({_id: db.ObjectID.createFromHexString(req.params.id)}, function(err, post){
-    res.render('edit_post.jade', {post: post});
+    req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
+      res.render('edit_post.jade', {
+        title: 'Tamidin`s blog: Edit post #'+post._id,
+        blog_title: 'Post #'+post._id,
+        blog_descr: 'Редактирование поста',
+        post: post, 
+        user: user
+      });
+    });
   });
 });
 
 //New post
-app.get('/post/new', loadUser, function(req, res){
-  res.render('new_post')
+app.get('/post/new', checkAdmin, function(req, res){
+  req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
+    res.render('new_post', {
+      title: 'Tamidin`s blog: New post',
+      blog_title: 'Новая запись',
+      blog_descr: 'Заполни поля и сохрани:)',
+      user: user
+    });
+  });
 });
 
-app.post('/post/new', function(req, res) {
-  // ������� ��������
+app.post('/post/new', checkAdmin, function(req, res) {
   console.log(req.body.post.title);
     db.collection('posts').insert({
     title: req.body.post.title,
@@ -161,14 +309,14 @@ app.post('/post/new', function(req, res) {
 });
 
 //Comment
-app.delete('/comm/:id.:format?', function(req, res) {
+app.delete('/comm/:id.:format?', checkAdmin, function(req, res) {
   req.db.comms.remove({_id: db.ObjectID.createFromHexString(req.params.id)}, function(err, result) {
     if (err) throw err;
     res.redirect('post/id'+req.body.post.id);
     });
 });
 
-app.post('/comm/:id.:format?', function(req, res) {
+app.post('/comm/:id.:format?', checkAuth, function(req, res) {
   req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
     db.collection('comms').insert({
       post_id: req.body.post.id,
@@ -184,10 +332,33 @@ app.post('/comm/:id.:format?', function(req, res) {
 
 
 
-function loadUser(req, res, next) {
+function checkAuth(req, res, next) {
   if (req.session.user_id) {
     req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
       if (user) {
+        req.currentUser = user;
+        next();
+      } else {
+        res.redirect('/');
+      }
+    });
+  } else {
+    res.redirect('/');
+  }
+}
+
+function checkNonAuth(req, res, next) {
+  if (req.session.user_id) {
+    res.redirect('/');
+  } else {
+    next();
+  }
+}
+
+function checkAdmin(req, res, next) {
+  if (req.session.user_id) {
+    req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
+      if (user.role=='admin') {
         req.currentUser = user;
         next();
       } else {

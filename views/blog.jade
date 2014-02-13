@@ -1,39 +1,15 @@
-h1(align="center") Блог Тая ^_^
-if user && user.role=='admin'
-  div(style='margin: 0 auto; width:700px')
-    nav
-      a(href='post/new' align=center) Добавить запись
-div(style="display:table;margin-left:auto;margin-right:auto;width:60%")
-  div(style="display:table-row")
-    div(style="display:table-cell;width:80%;padding:5")
-      each post, index in posts
-        if user && user.role=='admin'
-          form(method='post', action='/post/id'+post._id)
-            input(type="hidden" name="_method" value="delete")
-            button(type=submit) Удалить
-        if post.cr_date
-          p #{moment(post.cr_date).format("DD MMM YYYY HH:mm")}
+extends layout
+block append content
+  div(class="blog-post")
+    each post, index in posts
+      if user && user.role=='admin'
+        form(method='post', action='/post/id'+post._id)
+          input(type="hidden" name="_method" value="delete")
+          button(class="btn btn-sm btn-primary" type=submit) Удалить
+      h2(class="blog-post-title")
         a(href='post/id'+post._id)= post.title
-        p= post.body
-        if post.m_date
-          font(size=2)
-            p(align='right' ) #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
-        hr(color='blue')
-    div(style="display:table-cell;padding:5")
-      if user
-        p= "Привет, "+user.login
-        form(method='delete', action='/auth2')
-          button(type=submit) Выйти
-      else
-        a Авторизация
-        form(method='post', action='/auth')
-          a Логин
-          br
-          input(name='user[login]')
-          br
-          a Пароль
-          br
-          input(name='user[pass]')
-          br
-          button(type=submit) Войти
-        input(type="button" value="Зарегистрироваться" onclick="location.href='/registration'")
+      p(class='blog-post-meta') #{moment(post.cr_date).format("DD MMM YYYY HH:mm")}
+      p= post.body
+      if post.m_date
+        p(class='blog-post-meta' align='right') #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
+      hr(color='blue')

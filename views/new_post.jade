@@ -1,10 +1,8 @@
-form(method='post', action='/post/new')
-  input(name='post[id]', type='hidden')
-  a Тема
-  br
-  input(name='post[title]')
-  br
-  textarea(name='post[body]')
-  br
-  button(type=submit) Сохранить
-a(href='/') Вернуться
+extends layout
+block append content
+  div(class="blog-post")
+    form(method='post', action='/post/new')
+      input(name='post[id]', type='hidden')
+      input(name='post[title]' class="form-control input-sm" placeholder="Тема" required autofocus) 
+      textarea(class="form-control" name='post[body]' rows=7)
+      button(class="btn btn-sm btn-primary" type=submit) Сохранить

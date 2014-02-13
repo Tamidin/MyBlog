@@ -1,36 +1,36 @@
-h1(align="center") Посты
-div(style="position:relative; left:25%; width:50%;")
-  if user && user.role=='admin'
-    form(method='post', action='/post/id'+post._id)
-      input(type="hidden" name="_method" value="delete")
-      button(type=submit) Удалить
-      input(type="button" value="Изменить" onclick="location.href='/post/edit/id"+post._id+"'")
-  h2= post.title
-  p= post.body
-  if post.m_date
-    font(size=2)
-      p(align='right' ) #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
-  hr(color='blue')
-  p(align=center) Комментарии:
-  each comm, index in comms
+extends layout
+block append content
+  div(class="blog-post")
     if user && user.role=='admin'
-      form(method='post', action='/comm/'+comm._id)
-        input(name='post[id]', type='hidden', value=post._id)
+      form(method='post', action='/post/id'+post._id)
         input(type="hidden" name="_method" value="delete")
-        button(type=submit) Удалить
-    a #{moment(comm.cr_date).format("DD MMM YYYY HH:mm:ss")}
-    br
-    a= comm.author
-    br
-    p= comm.body
-    hr
-  if user
-    a Добавить комментарий
-    form(method='post', action='/comm/'+post._id)
-      input(name='post[id]', type='hidden', value=post._id)
-      input(name='comm[author_id]', type='hidden', value=user._id)
-      br
-      textarea(name='comm[body]')
-      br
-      button(type=submit) Сохранить
-a(href='/') На главную
+        div(class="btn-toolbar")
+          div(class="btn-group")
+            button(class="btn btn-sm btn-primary" type=submit) Удалить
+          div(class="btn-group")
+            button(class="btn btn-sm btn-primary" type="button" onclick="location.href='/post/edit/id"+post._id+"'") Изменить
+    p= post.body
+    if post.m_date
+      font(size=2)
+        p(align='right' class='blog-post-meta') #{'Отредактировано: '+moment(post.m_date).format("DD MMM YYYY HH:mm:ss")}
+    hr(color='blue')
+    if comms.length>0
+      p(align=center) Комментарии:
+      each comm, index in comms
+        div(class="well well-sm")
+          if user && user.role=='admin'
+            form(method='post', action='/comm/'+comm._id)
+              input(name='post[id]', type='hidden', value=post._id)
+              input(type="hidden" name="_method" value="delete")
+              button(class="btn btn-xs btn-primary" type=submit) Удалить
+          p(class='blog-post-meta') #{moment(comm.cr_date).format("DD MMM YYYY HH:mm:ss")}
+          p(style='margin: 0')= comm.author+' пишет:'
+          p= comm.body
+    if user
+      p(style='margin: 0') Добавить комментарий
+      form(method='post', action='/comm/'+post._id)
+        input(name='post[id]', type='hidden', value=post._id)
+        input(name='comm[author_id]', type='hidden', value=user._id)
+        textarea(class="form-control" name='comm[body]' rows=7)
+        br
+        button(class="btn btn-sm btn-primary" type=submit) Добавить

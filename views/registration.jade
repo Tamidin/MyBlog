@@ -1,12 +1,38 @@
-
-form(method='post', action='/registration')
-  a Логин
-  br
-  input(name='user[login]')
-  br
-  a Пароль
-  br
-  input(name='user[pass]')
-  br
-  button(type=submit) Сохранить
-a(href='/') Вернуться
+doctype html
+html
+  head
+    title= title
+    link(rel="stylesheet" href="/styles/bootstrap.css")
+    link(rel="stylesheet" href="/styles/bootstrap-responsive.css")
+    link(href="/styles/blog.css" rel="stylesheet")
+  body
+    div(class="page-wrapper")
+      div(class="blog-masthead")
+        div(class="container")
+          nav(class="blog-nav")
+            a(class="blog-nav-item" href="/") Главная
+      div(class="container")
+        div(class="blog-header")
+          h1(class="blog-title")= blog_title
+          p(class="lead blog-description")= blog_descr
+      div(class="container")      
+        div(class="row")
+          div(class="col-sm-8 blog-main")
+            div(class="blog-post")
+              form(method='post', action='/registration')
+                div(class="row")
+                  label(class="control-label col-sm-3" for="login") Логин: 
+                  div(class="col-xs-4")
+                    input(name='user[login]' type="login" class="form-control" required autofocus id="login")
+                div(class="row")
+                  label(class="control-label col-sm-3" for="pass") Пароль: 
+                  div(class="col-xs-4")
+                    input(name='user[pass]' type="password" class="form-control" required id="pass")
+                button(class="btn btn-sm btn-primary" type=submit) Сохранить
+        div(class="page-buffer")
+    div(class="blog-footer")
+      p Created by Tai
+        br
+        a(href="#") Наверх
+    script(src="http://code.jquery.com/jquery-latest.js")
+    script(src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js")
