@@ -1,0 +1,22 @@
+extends layout2
+block append content
+  div(class="blog-post")
+    if er
+    div(class="alert alert-danger")
+      p= er
+    div(class="col-sm-4")
+    div(class="col-sm-4")
+      form(method='post', action='/auth')
+        div(class="form-group")
+          input(name='user[login]' type="login" class="form-control input-sm" placeholder="login" required autofocus value=login)
+        div(class="form-group")
+          input(name='user[pass]' type="password" class="form-control input-sm" placeholder="Password" required)
+        div(class="form-group")
+          button(class="btn btn-primary btn-block" type="submit") Войти
+      div(class="btn-toolbar")
+        div(class="btn-group")
+          a(href="/auth/linkedin")
+            img(src="/images/linkedin.png")
+        div(class="btn-group")
+          a(href="/auth/vkontakte")
+            img(src="/images/vk.png")

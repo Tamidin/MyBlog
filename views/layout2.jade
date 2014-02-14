@@ -11,23 +11,9 @@ html
         div(class="container")
           nav(class="navbar-header")
             a(class="blog-nav-item" href="/") Главная
-          div(class="navbar-collapse collapse")
-            form(class="navbar-form navbar-right" role="form" method='post', action='../auth')
-              input(type="hidden" name="_method" value="delete")
-              if user
-                div(class="btn-toolbar")
-                  if user.role=='admin'
-                    div(class="btn-group")
-                      button(type="button" class="btn btn-success" onclick="location.href='/post/new'") Добавить запись
-                  div(class="btn-group")
-                    button(class="btn btn btn-success" type=submit) Выйти
-              else
-                button(type="button" class="btn btn-success" data-toggle="modal" data-target=".bs-modal-sm") Войти
-      include modal
       div(class="container")
         div(class="blog-header")
-          h1(class="blog-title")= blog_title
-          p(class="lead blog-description")= blog_descr
+          h1(class="blog-title" align="center")= blog_title
       div(class="container")      
         div(class="row")
           div(class="col-sm-12 blog-main")

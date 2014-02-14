@@ -1,0 +1,20 @@
+div(class="modal fade bs-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true") 
+  div(class="modal-dialog modal-sm")
+    div(class="modal-content")
+      div(class="modal-header")
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") ×
+        h2(class="form-signin-heading" id="myModalLabel") Авторизация
+      div(class="modal-body")
+        form(method='post', action='/auth' class="form-signin" role="form")
+          div(class="form-group")
+            input(name='user[login]' type="login" class="form-control input-sm" placeholder="login" required autofocus)
+          div(class="form-group")
+            input(name='user[pass]' type="password" class="form-control input-sm" placeholder="Password" required)
+          div(class="form-group")
+            button(class="btn btn-primary btn-block" type="submit") Войти
+        button(class="btn btn-primary btn-block" onclick="location.href='/registration'") Зарегистрироваться
+      div(class="modal-footer")
+        a(href="/auth/linkedin")
+          img(src="/images/linkedin.png")
+        a(href="/auth/vkontakte")
+          img(src="/images/vk.png")
