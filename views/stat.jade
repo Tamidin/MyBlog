@@ -1,0 +1,11 @@
+extends layout
+block append content
+  div(class="blog-post")
+    img(src=user.avatar)
+    if comms.length>0
+      p Последние комментарии:
+      each comm, index in comms
+        div(class="well well-sm")
+          p(class='blog-post-meta') #{moment(comm.cr_date).format("DD MMM YYYY HH:mm:ss")}
+          p(style='margin: 0')= comm.author+' пишет:'
+          p= comm.body

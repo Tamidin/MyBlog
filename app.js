@@ -10,6 +10,7 @@ var express = require('express'),
 var app = express();
 
 // Configuration
+moment.lang('ru');
 app.use(express.cookieParser('crpt'));
 app.use(express.session());
 app.use(function(req, res, next) {
@@ -36,6 +37,7 @@ app.configure(function(){
   var index = require('./routes/index');
   var comment = require('./routes/comment');
   var registration = require('./routes/registration');
+  var stat = require('./routes/stat');
 
 //Checker
   var check = require('./check');
@@ -107,6 +109,9 @@ passport.use(new LinkedInStrategy({
   //Comment
     app.delete('/comm/:id.:format?', check.admin, comment.del);
     app.post('/comm/:id.:format?', check.auth, comment.insert);
+
+  //Stat
+    app.get('/stat/id:id.:format?', stat.view(moment));
 //------------------------------------------------------------------------------
 
 app.listen(80, function(){

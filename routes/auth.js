@@ -71,20 +71,21 @@ exports.vkontakte = function(passport) {
           blog_title: 'Авторизация'
         }); 
       } else {
-        new Model('users').find({vkontakte_id: user.id}, function(err, user){
-          if (user) {
-            req.session.user_id=user._id;
+        new Model('users').find({vkontakte_id: user.id}, function(err, l_user){
+          if (l_user) {
+            req.session.user_id=l_user._id;
             res.redirect("/");
           } else {
-            req.db.users.insert({
+            new Model('users').insert({
               vkontakte_id: user.id,
               login: user.displayName,
+              avatar: user.photos[0].value,
               role: "user"
             }, function(err, result) {
               if (err) { console.log(err); };
             });
-            new Model('users').find({vkontakte_id: user.id}, function(err, user){
-              req.session.user_id = user._id;
+            new Model('users').find({vkontakte_id: user.id}, function(err, l_user){
+              req.session.user_id = l_user._id;
               res.redirect("/");
             });
           }

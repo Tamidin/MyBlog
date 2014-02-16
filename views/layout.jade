@@ -16,6 +16,7 @@ html
               input(type="hidden" name="_method" value="delete")
               if user
                 div(class="btn-toolbar")
+                  button(type="button" class="btn btn-success" onclick="location.href='/stat/id"+user._id+"'") Я
                   if user.role=='admin'
                     div(class="btn-group")
                       button(type="button" class="btn btn-success" onclick="location.href='/post/new'") Добавить запись

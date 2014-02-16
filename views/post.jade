@@ -24,8 +24,14 @@ block append content
               input(type="hidden" name="_method" value="delete")
               button(class="btn btn-xs btn-primary" type=submit) Удалить
           p(class='blog-post-meta') #{moment(comm.cr_date).format("DD MMM YYYY HH:mm:ss")}
-          p(style='margin: 0')= comm.author+' пишет:'
-          p= comm.body
+          div(class="media")
+            a(class="pull-left" href='/stat/id'+comm.author_id)
+              img(class="media-object" src=comm.author_av)
+            div(class="media-body")
+              p(style='margin: 0') 
+              a(href='/stat/id'+comm.author_id)= comm.author+' '
+              пишет:
+              p= comm.body
     if user
       p(style='margin: 0') Добавить комментарий
       form(method='post', action='/comm/'+post._id)

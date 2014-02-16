@@ -5,6 +5,8 @@ exports.insert = function(req, res) {
     new Model('comms').insert({
       post_id: req.body.post.id,
       author: user.login,
+      author_id: req.session.user_id,
+      author_av: user.avatar,
       body: req.body.comm.body,
       cr_date: new Date()
     }, function(err, result) {
