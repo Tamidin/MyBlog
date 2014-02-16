@@ -1,5 +1,7 @@
+var Model = require('../model');
+
 exports.enter = function(req, res){
-  req.db.users.findOne({login: req.body.user.login, password: req.body.user.pass}, function(err, user){
+  new Model('users').find({login: req.body.user.login, password: req.body.user.pass}, function(err, user){
     if (user) {
       req.session.user_id = user._id;
       if (req.headers['referer']=='/auth')  res.redirect(req.headers['referer']); else  res.redirect('/');
@@ -36,20 +38,20 @@ exports.linkedin = function(passport) {
           blog_title: 'Авторизация'
         }); 
       } else {
-        req.db.users.findOne({linkedin_id: user.id}, function(err, l_user){
-          if (l_user) {
-            req.session.user_id = l_user._id;
+        new Model('users').find({linkedin_id: user.id}, function(err, user){
+          if (user) {
+            req.session.user_id = user._id;
             res.redirect("/");
           } else {
-            req.db.users.insert({
+            new Model('users').insert({
               linkedin_id: user.id,
               login: req.user.displayName,
               role: "user"
             }, function(err, result) {
               if (err) { console.log(err); };
             });
-            req.db.users.findOne({linkedin_id: user.id}, function(err, l_user){
-              req.session.user_id = l_user._id;
+            new Model('users').find({linkedin_id: user.id}, function(err, user){
+              req.session.user_id = user._id;
               res.redirect("/");
             });
           } 
@@ -69,9 +71,9 @@ exports.vkontakte = function(passport) {
           blog_title: 'Авторизация'
         }); 
       } else {
-        req.db.users.findOne({vkontakte_id: user.id}, function(err, l_user){
-          if (l_user) {
-            req.session.user_id=l_user._id;
+        new Model('users').find({vkontakte_id: user.id}, function(err, user){
+          if (user) {
+            req.session.user_id=user._id;
             res.redirect("/");
           } else {
             req.db.users.insert({
@@ -81,8 +83,8 @@ exports.vkontakte = function(passport) {
             }, function(err, result) {
               if (err) { console.log(err); };
             });
-            req.db.users.findOne({vkontakte_id: user.id}, function(err, l_user){
-              req.session.user_id = l_user._id;
+            new Model('users').find({vkontakte_id: user.id}, function(err, user){
+              req.session.user_id = user._id;
               res.redirect("/");
             });
           }

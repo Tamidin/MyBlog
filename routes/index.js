@@ -1,7 +1,9 @@
-exports.view = function(moment, db){
+var Model = require('../model');
+
+exports.view = function(moment){
   return function(req, res) {
-    req.db.posts.find().sort({$natural: -1}).toArray(function(err, posts){
-      if (req.session.user_id) {req.db.users.findOne({_id: db.ObjectID.createFromHexString(req.session.user_id)}, function(err, user) {
+    new Model('posts').getlist({}, {cr_date: -1}, function(err, posts){
+      if (req.session.user_id) {new Model('users').find({_id: req.session.user_id}, function(err, user) {
         if (user) {
           res.render('blog.jade', {
             title: 'Tamidin`s blog', 

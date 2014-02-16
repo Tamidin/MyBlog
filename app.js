@@ -3,8 +3,6 @@ var express = require('express'),
     moment = require("moment"),
     http = require('http'),
     path = require('path'),
-    mongoskin = require('mongoskin'),
-    db = mongoskin.db('mongodb://localhost:27017/blog?auto_reconnect', {safe:true}),
     passport = require('passport'),
     LinkedInStrategy = require('passport-linkedin').Strategy,
     VKontakteStrategy = require('passport-vkontakte').Strategy;
@@ -15,10 +13,6 @@ var app = express();
 app.use(express.cookieParser('crpt'));
 app.use(express.session());
 app.use(function(req, res, next) {
-  req.db = {};
-  req.db.posts = db.collection('posts');
-  req.db.users = db.collection('users');
-  req.db.comms = db.collection('comms');
   res.locals._csrf = req.session._csrf;
   next();
 });
@@ -84,7 +78,7 @@ passport.use(new LinkedInStrategy({
 // Routes
   //Authorization
     app.post('/auth', auth.enter);
-    app.del('/auth', check.auth(db), auth.exit);
+    app.del('/auth', check.auth, auth.exit);
     //LinkedIn
       app.get('/auth/linkedin', passport.authenticate('linkedin'),function(req, res){});
       app.get('/auth/linkedin/callback', auth.linkedin(passport));
@@ -95,24 +89,24 @@ passport.use(new LinkedInStrategy({
       app.get('/login', check.nonAuth, auth.view);
     //Registration
       app.get('/registration', check.nonAuth, registration.view);
-      app.post('/registration', check.nonAuth, registration.save(db));
+      app.post('/registration', check.nonAuth, registration.save);
 
   //index
-   app.get('/', index.view(moment, db));
+   app.get('/', index.view(moment));
 
   //Post
-    app.get('/post/id:id.:format?', post.view(moment, db));
-    app.put('/post/id:id.:format?', check.admin(db), post.upd(db));
-    app.delete('/post/id:id.:format?', check.admin(db), post.del(db));
+    app.get('/post/id:id.:format?', post.view(moment));
+    app.put('/post/id:id.:format?', check.admin, post.upd);
+    app.delete('/post/id:id.:format?', check.admin, post.del);
     //Edit post
-      app.get('/post/edit/id:id.:format?', check.admin(db), post.edition(db));
+      app.get('/post/edit/id:id.:format?', check.admin, post.edition);
     //New post
-      app.get('/post/new', check.admin(db), post.creation(db));
-      app.post('/post/new', check.admin(db), post.insert);
+      app.get('/post/new', check.admin, post.creation);
+      app.post('/post/new', check.admin, post.insert);
 
   //Comment
-    app.delete('/comm/:id.:format?', check.admin(db), comment.del(db));
-    app.post('/comm/:id.:format?', check.auth(db), comment.insert(db));
+    app.delete('/comm/:id.:format?', check.admin, comment.del);
+    app.post('/comm/:id.:format?', check.auth, comment.insert);
 //------------------------------------------------------------------------------
 
 app.listen(80, function(){
